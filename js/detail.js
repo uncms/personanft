@@ -296,29 +296,37 @@ async function writeComment() {
   let result = null;
   const textareaComment = document.querySelector(".write-comment");
 
-  if (textareaComment.value.trim() != "") {
-    result = await contractPersona.methods
-      .writeComment(nftID, textareaComment.value.trim())
-      .send({
-        from: account,
-        maxFeePerGas: 64000000000,
-        maxPriorityFeePerGas: 32000000000,
-      });
-  } else {
-    alert("코멘트를 작성해주세요! Please write a comment for this project!");
-  }
-
-  if (result != null) {
-    alert(
-      "정상적으로 코멘트가 온체인 상에 등록되었습니다! Your comment has been successfully registered on blockchain network!"
-    );
-
-    await getCommentCount();
-    await canWriteComment();
-
-    if (!isLoading) {
-      await loadComments();
+  if (canComment) {
+    if (textareaComment.value.trim() != "") {
+      result = await contractPersona.methods
+        .writeComment(nftID, textareaComment.value.trim())
+        .send({
+          from: account,
+          maxFeePerGas: 64000000000,
+          maxPriorityFeePerGas: 32000000000,
+        });
+    } else {
+      alert("코멘트를 작성해주세요! Please write a comment for this project!");
     }
+
+    if (result != null) {
+      alert(
+        "정상적으로 코멘트가 온체인 상에 등록되었습니다! Your comment has been successfully registered on blockchain network!"
+      );
+
+      await getCommentCount();
+      await canWriteComment();
+
+      if (!isLoading) {
+        await loadComments();
+      }
+
+      textareaComment.value = "";
+    }
+  } else {
+    alert(
+      "코멘트는 24시간 간격으로 작성하실 수 있습니다! You can write a comment every 24 hours!"
+    );
   }
 }
 
