@@ -11,10 +11,6 @@ window.addEventListener("load", async function () {
 
   const connection = await ethereum.request({ method: "eth_accounts" });
 
-  if (connection.length) {
-    await connectWallet();
-  }
-
   nftDatas = [];
   nftDatas = JSON.parse(JSON.stringify(nftList));
 
@@ -23,6 +19,10 @@ window.addEventListener("load", async function () {
   nftID = parseInt(urlSearch.get("nft"));
 
   generateDetail(nftDatas[nftID]);
+  
+  if (connection.length) {
+    await connectWallet();
+  }
 });
 
 const nftBanner = document.querySelector(".nft-banner");
