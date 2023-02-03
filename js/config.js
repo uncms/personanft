@@ -1,0 +1,3 @@
+const CONTRACTADDRESS = "";
+
+const ABI = [];

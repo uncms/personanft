@@ -3,7 +3,7 @@ function goHome() {
 }
 
 function goDetail() {
-  location.href = "/detail.html?nft=" + this.getAttribute("nft-id");
+  location.href = "/detail?nft=" + this.getAttribute("nft-id");
 }
 
 let nftDatas = [];

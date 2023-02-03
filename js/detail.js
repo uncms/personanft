@@ -138,35 +138,24 @@ let accumulatedComments = [];
 let currentComments = [];
 let isLoading = false;
 
-function loadComments() {
+async function loadComments() {
   isLoading = true;
 
-  commentCount = 8;
+  await contractPersona.methods
+    .getAllData(nftID)
+    .call({
+      from: account,
+    })
+    .then(function (res) {
+      commenters = res[0];
+      currentComments = res[1];
+      accumulatedComments = res[2];
+    })
+    .catch(function (err) {
+      console.log(err);
+    });
 
-  commenters = [
-    "0x3845as2d1",
-    "0xasdfq8we7",
-    "0xdf4q8we44",
-    "0xqwo878wee",
-    "0x57qw5s1d8",
-    "0xs8q52s1d5",
-    "0x65s78w4e5",
-    "0x5s7d89q5s",
-  ];
-  accumulatedComments = [1, 1, 2, 3, 1, 2, 6, 1];
-
-  currentComments = [
-    "스토리도 좋고 캐릭터들도 넘나 매력 있네요! 나만의 신수 캐릭터를 내 입맛대로 키우는 재미가 쏠쏠할 듯",
-    "신수는 오래가는 P2E가 되었으면 합니다!",
-    "실물적인 혜택보다는 게임답게 유저 경쟁 구도로 성장시키는 NFT군요! 게임 좋아하시는분들은 관심 가질 듯",
-    "프리민팅에다 과한 로드맵이 없는 현실적인 프로젝트라 매력적인 것 같아요!",
-    "로드맵도 담백하고 좋네요 게다가 프리민팅은 무조건 GO!",
-    "신수 MBTI 테스트 같은 걸 만든 걸 보니 확실히 사람들을 어떻게 이끌 수 있는지 아는 팀이군요!",
-    "P2E가 토크노믹스가 없으면 팥 없는 찐빵 아닌가...",
-    "P2E는 진짜 늘 관심 갖게 되는 것 같은데, 신수는 더더욱 재밌어 보이는 거 같아요!",
-  ];
-
-  createComments();
+  await createComments();
 }
 
 function createComments() {
@@ -222,8 +211,11 @@ function createComments() {
 let web3;
 let account = null;
 let isConnected = false;
+let contractPersona;
 
 async function connectWallet() {
+  contractPersona = new web3.eth.Contract(ABI, CONTRACTADDRESS);
+
   if (window.ethereum) {
     await window.ethereum.request({ method: "net_version" }).then((res) => {
       if (res != 137) {
@@ -246,7 +238,10 @@ async function connectWallet() {
       document.querySelector(".connect-wallet").innerHTML =
         account.substring(0, 8) + "...";
 
-      if (!isLoading) {
+      await getCommentCount();
+      await canWriteComment();
+
+      if (!isLoading && isCommented) {
         await loadComments();
       }
     } else {
@@ -258,5 +253,79 @@ async function connectWallet() {
       "메타마스크 설치가 필요합니다! Please install and activate MetaMask!"
     );
     return;
+  }
+}
+
+let canComment = false;
+let isCommented = false;
+
+async function getCommentCount() {
+  await contractPersona.methods
+    .getCommentCount(nftID)
+    .call({
+      from: account,
+    })
+    .then(function (res) {
+      commentCount = res;
+      document.querySelector(".section-title").innerHTML =
+        "Comments [" + res + "]";
+    })
+    .catch(function (err) {
+      console.log(err);
+    });
+}
+
+async function canWriteComment() {
+  await contractPersona.methods
+    .canWriteComment()
+    .call({
+      from: account,
+    })
+    .then(function (res) {
+      canComment = res[0];
+      if (parseInt(res[1]) > 0) {
+        isCommented = true;
+      }
+    })
+    .catch(function (err) {
+      console.log(err);
+    });
+}
+
+async function writeComment() {
+  let result = null;
+  const textareaComment = document.querySelector(".write-comment");
+
+  if (textareaComment.value.trim() != "") {
+    result = await contractPersona.methods
+      .writeComment(nftID, textareaComment.value.trim())
+      .send({
+        from: account,
+        maxFeePerGas: 64000000000,
+        maxPriorityFeePerGas: 32000000000,
+      });
+  } else {
+    alert("코멘트를 작성해주세요! Please write a comment for this project!");
+  }
+
+  if (result != null) {
+    alert(
+      "정상적으로 코멘트가 온체인 상에 등록되었습니다! Your comment has been successfully registered on blockchain network!"
+    );
+
+    await getCommentCount();
+    await canWriteComment();
+
+    if (!isLoading) {
+      await loadComments();
+    }
+  }
+}
+
+async function checkConnection() {
+  if (account == null || isConnected == false) {
+    alert(
+      "메타마스크 지갑을 먼저 연결해주세요. Please connect your MetaMask to our website!"
+    );
   }
 }
