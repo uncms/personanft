@@ -7,10 +7,6 @@ let urlSearch = null;
 let nftID = 0;
 
 window.addEventListener("load", async function () {
-  web3 = new Web3(window.ethereum);
-
-  const connection = await ethereum.request({ method: "eth_accounts" });
-
   nftDatas = [];
   nftDatas = JSON.parse(JSON.stringify(nftList));
 
@@ -19,7 +15,11 @@ window.addEventListener("load", async function () {
   nftID = parseInt(urlSearch.get("nft"));
 
   generateDetail(nftDatas[nftID]);
-  
+
+  web3 = new Web3(window.ethereum);
+
+  const connection = await ethereum.request({ method: "eth_accounts" });
+
   if (connection.length) {
     await connectWallet();
   }
